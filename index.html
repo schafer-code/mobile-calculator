@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Call Condition Calculator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f6f6f4;
+    --bg-active: #e8f0fb;
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --text-active: #1a4fa0;
+    --border: rgba(0,0,0,0.13);
+    --border-active: #3b7dd8;
+    --accent: #3b7dd8;
+    --font: Georgia, 'Times New Roman', serif;
+    --mono: 'Courier New', Courier, monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  h1 { font-size: 19px; font-weight: normal; letter-spacing: -0.3px; margin-bottom: 4px; }
+
+  .subtitle { font-size: 12px; color: var(--text-muted); font-family: var(--mono); margin-bottom: 2rem; }
+
+  .row { border-top: 1px solid var(--border); padding: 13px 0 10px; }
+  .row:last-of-type { border-bottom: 1px solid var(--border); }
+
+  .row-header { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+
+  .row-label {
+    font-size: 11px; font-weight: bold; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--text-muted); font-family: var(--mono); flex: 1;
+  }
+
+  .edit-btn {
+    background: none; border: none; font-family: var(--mono); font-size: 11px;
+    color: var(--accent); cursor: pointer; text-decoration: underline;
+    text-underline-offset: 2px; padding: 0;
+  }
+  .edit-btn:hover { opacity: 0.7; }
+
+  .toggle-btn {
+    background: none; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.07em; font-weight: bold;
+    flex: 1; padding: 0;
+  }
+  .chevron {
+    width: 16px; height: 16px; border: 1px solid var(--border); border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: bold; color: var(--text-muted);
+    transition: background 0.12s, border-color 0.12s; flex-shrink: 0;
+    line-height: 1;
+  }
+  .toggle-btn.open .chevron { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .toggle-btn:hover .chevron { border-color: var(--accent); }
+
+  .optional-body { display: none; }
+  .optional-body.open { display: block; }
+
+  .indent {
+    margin-top: 12px; padding-left: 18px; border-left: 2px solid var(--border);
+  }
+  .indent .sublabel {
+    font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--text-muted); font-family: var(--mono); display: flex;
+    align-items: center; justify-content: space-between; margin-bottom: 8px;
+  }
+
+  .options { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .opt {
+    display: flex; align-items: center; gap: 7px; padding: 6px 13px;
+    border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px;
+    cursor: pointer; background: var(--bg); color: var(--text);
+    transition: border-color 0.1s, background 0.1s; font-family: var(--font); user-select: none;
+  }
+  .opt:hover { border-color: var(--accent); }
+  .opt.active { background: var(--bg-active); border-color: var(--border-active); color: var(--text-active); }
+
+  .dot {
+    width: 13px; height: 13px; border: 1.5px solid var(--border); border-radius: 50%;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  }
+  .opt.active .dot { background: var(--accent); border-color: var(--accent); }
+  .opt.active .dot::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #fff; }
+
+  .opt-pct { font-size: 11px; color: var(--text-muted); font-family: var(--mono); }
+  .opt.active .opt-pct { color: var(--text-active); opacity: 0.75; }
+
+  .edit-panel {
+    display: none; flex-wrap: wrap; gap: 8px 16px; margin-top: 10px;
+    background: var(--bg-secondary); border-radius: 5px; padding: 10px 14px;
+    font-family: var(--mono); font-size: 12px; color: var(--text-muted);
+  }
+  .edit-panel.open { display: flex; }
+  .edit-field { display: flex; align-items: center; gap: 5px; }
+  .edit-field input {
+    width: 50px; padding: 3px 6px; border: 1px solid var(--border); border-radius: 4px;
+    font-size: 12px; font-family: var(--mono); color: var(--text); background: var(--bg); text-align: right;
+  }
+  .edit-field input:focus { outline: none; border-color: var(--accent); }
+  .edit-note { font-size: 11px; color: var(--text-muted); width: 100%; }
+
+  .result-area { margin-top: 2rem; }
+  .result-num { font-size: 50px; font-weight: normal; letter-spacing: -2px; line-height: 1; color: var(--text); }
+  .result-label { font-size: 12px; color: var(--text-muted); font-family: var(--mono); margin-top: 5px; }
+
+  .formula {
+    margin-top: 1.25rem; background: var(--bg-secondary); border-radius: 5px;
+    padding: 12px 14px; font-size: 12px; font-family: var(--mono);
+    color: var(--text-muted); line-height: 2; min-height: 40px;
+  }
+  .formula .factor { color: var(--text-active); font-weight: bold; }
+  .formula .eq { color: var(--text); font-weight: bold; }
+
+  .reset-btn {
+    margin-top: 1.25rem; padding: 6px 14px; font-size: 12px; font-family: var(--mono);
+    border: 1px solid var(--border); border-radius: 5px; background: transparent;
+    color: var(--text-muted); cursor: pointer;
+  }
+  .reset-btn:hover { background: var(--bg-secondary); color: var(--text); }
+</style>
+</head>
+<body>
+
+<h1>Call condition calculator</h1>
+<p class="subtitle">Required rows always shown. Click + to add optional detail conditions.</p>
+
+<!-- DIRECTION (required) -->
+<div class="row">
+  <div class="row-header">
+    <span class="row-label">Call direction</span>
+    <button class="edit-btn" onclick="toggleEdit('direction')">edit %</button>
+  </div>
+  <div class="options" id="direction">
+    <div class="opt active" data-group="direction" data-key="outbound" onclick="pick(this)">
+      <span class="dot"></span> Outbound <span class="opt-pct" id="lbl-outbound">90%</span>
+    </div>
+    <div class="opt" data-group="direction" data-key="inbound" onclick="pick(this)">
+      <span class="dot"></span> Inbound <span class="opt-pct" id="lbl-inbound">10%</span>
+    </div>
+  </div>
+  <div class="edit-panel" id="edit-direction">
+    <div class="edit-field">Outbound <input type="number" id="pct-outbound" value="90" min="0" max="100" step="1" oninput="syncPair('outbound','inbound',this)"> %</div>
+    <div class="edit-field">Inbound <input type="number" id="pct-inbound" value="10" min="0" max="100" step="1" oninput="syncPair('inbound','outbound',this)"> %</div>
+    <div class="edit-note">Must sum to 100%</div>
+  </div>
+</div>
+
+<!-- PLATFORM (required) -->
+<div class="row">
+  <div class="row-header">
+    <span class="row-label">Platform</span>
+    <button class="edit-btn" onclick="toggleEdit('platform')">edit %</button>
+  </div>
+  <div class="options" id="platform">
+    <div class="opt active" data-group="platform" data-key="ios" onclick="pick(this); onPlatformPick(this)">
+      <span class="dot"></span> iOS <span class="opt-pct" id="lbl-ios">58%</span>
+    </div>
+    <div class="opt" data-group="platform" data-key="android" onclick="pick(this); onPlatformPick(this)">
+      <span class="dot"></span> Android <span class="opt-pct" id="lbl-android">42%</span>
+    </div>
+  </div>
+  <div class="edit-panel" id="edit-platform">
+    <div class="edit-field">iOS <input type="number" id="pct-ios" value="58" min="0" max="100" step="1" oninput="syncPair('ios','android',this)"> %</div>
+    <div class="edit-field">Android <input type="number" id="pct-android" value="42" min="0" max="100" step="1" oninput="syncPair('android','ios',this)"> %</div>
+    <div class="edit-note">Must sum to 100%</div>
+  </div>
+</div>
+
+<!-- DEVICE (optional, only visible when Android selected) -->
+<div class="row" id="row-device" style="display:none;">
+  <div class="row-header">
+    <button class="toggle-btn" id="toggle-device" onclick="toggleOptional('device')">
+      <span class="chevron">+</span> Android device
+    </button>
+    <button class="edit-btn" id="editbtn-device" style="display:none;" onclick="toggleEdit('device')">edit %</button>
+  </div>
+  <div class="optional-body" id="body-device">
+    <div class="options" id="device">
+      <div class="opt active" data-group="device" data-key="samsung" onclick="pick(this)">
+        <span class="dot"></span> Samsung <span class="opt-pct" id="lbl-samsung">80% of Android</span>
+      </div>
+      <div class="opt" data-group="device" data-key="pixel" onclick="pick(this)">
+        <span class="dot"></span> Pixel <span class="opt-pct" id="lbl-pixel">20% of Android</span>
+      </div>
+    </div>
+    <div class="edit-panel" id="edit-device">
+      <div class="edit-field">Samsung <input type="number" id="pct-samsung" value="80" min="0" max="100" step="1" oninput="syncPair('samsung','pixel',this)"> %</div>
+      <div class="edit-field">Pixel <input type="number" id="pct-pixel" value="20" min="0" max="100" step="1" oninput="syncPair('pixel','samsung',this)"> %</div>
+      <div class="edit-note">% of Android users. Must sum to 100%</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP STATE (optional) -->
+<div class="row">
+  <div class="row-header">
+    <button class="toggle-btn" id="toggle-appstate" onclick="toggleOptional('appstate')">
+      <span class="chevron">+</span> App state
+    </button>
+    <button class="edit-btn" id="editbtn-appstate" style="display:none;" onclick="toggleEdit('appstate')">edit %</button>
+  </div>
+  <div class="optional-body" id="body-appstate">
+    <div class="options" id="appstate">
+      <div class="opt active" data-group="appstate" data-key="closed" onclick="pick(this)">
+        <span class="dot"></span> Closed <span class="opt-pct" id="lbl-closed">20%</span>
+      </div>
+      <div class="opt" data-group="appstate" data-key="background" onclick="pick(this)">
+        <span class="dot"></span> Background <span class="opt-pct" id="lbl-background">60%</span>
+      </div>
+      <div class="opt" data-group="appstate" data-key="active" onclick="pick(this)">
+        <span class="dot"></span> Active / foreground <span class="opt-pct" id="lbl-active">20%</span>
+      </div>
+    </div>
+    <div class="edit-panel" id="edit-appstate">
+      <div class="edit-field">Closed <input type="number" id="pct-closed" value="20" min="0" max="100" step="1" oninput="syncThree('closed','background','active',this)"> %</div>
+      <div class="edit-field">Background <input type="number" id="pct-background" value="60" min="0" max="100" step="1" oninput="syncThree('background','closed','active',this)"> %</div>
+      <div class="edit-field">Active <input type="number" id="pct-active" value="20" min="0" max="100" step="1" oninput="syncThree('active','closed','background',this)"> %</div>
+      <div class="edit-note">Must sum to 100%. Adjusting one splits the remainder evenly across the other two.</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOCK SCREEN (optional) -->
+<div class="row">
+  <div class="row-header">
+    <button class="toggle-btn" id="toggle-lock" onclick="toggleOptional('lock')">
+      <span class="chevron">+</span> Lock screen
+    </button>
+    <button class="edit-btn" id="editbtn-lock" style="display:none;" onclick="toggleEdit('lock')">edit %</button>
+  </div>
+  <div class="optional-body" id="body-lock">
+    <div class="options" id="lock">
+      <div class="opt active" data-group="lock" data-key="locked" onclick="pick(this); onLockPick(this)">
+        <span class="dot"></span> Locked <span class="opt-pct" id="lbl-locked">70%</span>
+      </div>
+      <div class="opt" data-group="lock" data-key="unlocked" onclick="pick(this); onLockPick(this)">
+        <span class="dot"></span> Unlocked <span class="opt-pct" id="lbl-unlocked">30%</span>
+      </div>
+    </div>
+    <div class="edit-panel" id="edit-lock">
+      <div class="edit-field">Locked <input type="number" id="pct-locked" value="70" min="0" max="100" step="1" oninput="syncPair('locked','unlocked',this)"> %</div>
+      <div class="edit-field">Unlocked <input type="number" id="pct-unlocked" value="30" min="0" max="100" step="1" oninput="syncPair('unlocked','locked',this)"> %</div>
+      <div class="edit-note">Must sum to 100%</div>
+    </div>
+
+    <!-- how locked — sub-indent, visible when locked is selected -->
+    <div class="indent" id="howlocked-indent" style="display:none;">
+      <div class="sublabel">
+        <span>How locked</span>
+        <button class="edit-btn" onclick="toggleEdit('howlocked')">edit %</button>
+      </div>
+      <div class="options" id="howlocked">
+        <div class="opt active" data-group="howlocked" data-key="timedout" onclick="pick(this)">
+          <span class="dot"></span> Timed out <span class="opt-pct" id="lbl-timedout">80% of locked</span>
+        </div>
+        <div class="opt" data-group="howlocked" data-key="manual" onclick="pick(this)">
+          <span class="dot"></span> Manual <span class="opt-pct" id="lbl-manual">20% of locked</span>
+        </div>
+      </div>
+      <div class="edit-panel" id="edit-howlocked">
+        <div class="edit-field">Timed out <input type="number" id="pct-timedout" value="80" min="0" max="100" step="1" oninput="syncPair('timedout','manual',this)"> %</div>
+        <div class="edit-field">Manual <input type="number" id="pct-manual" value="20" min="0" max="100" step="1" oninput="syncPair('manual','timedout',this)"> %</div>
+        <div class="edit-note">% of locked sessions. Must sum to 100%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="result-area">
+  <div class="result-num" id="result-num">—</div>
+  <div class="result-label" id="result-label">of all sessions match this condition</div>
+</div>
+<div class="formula" id="formula"></div>
+<button class="reset-btn" onclick="resetAll()">Reset to defaults</button>
+
+<script>
+  const defaults = {
+    outbound:90, inbound:10,
+    ios:58, android:42,
+    samsung:80, pixel:20,
+    closed:20, background:60, active:20,
+    locked:70, unlocked:30,
+    timedout:80, manual:20
+  };
+
+  const optionalState = { device: false, appstate: false, lock: false };
+
+  function getPct(key) { return parseFloat(document.getElementById('pct-'+key).value) || 0; }
+
+  function updateLabels() {
+    const sub = { samsung:' of Android', pixel:' of Android', timedout:' of locked', manual:' of locked' };
+    Object.keys(defaults).forEach(k => {
+      const el = document.getElementById('lbl-'+k);
+      if (el) el.textContent = getPct(k) + '%' + (sub[k] || '');
+    });
+  }
+
+  function syncPair(a, b, input) {
+    const v = Math.min(100, Math.max(0, parseFloat(input.value)||0));
+    input.value = v;
+    document.getElementById('pct-'+b).value = 100 - v;
+    updateLabels(); calculate();
+  }
+
+  function syncThree(changed, o1, o2, input) {
+    const v = Math.min(100, Math.max(0, parseFloat(input.value)||0));
+    input.value = v;
+    const rem = Math.max(0, 100 - v);
+    const a = Math.round(rem / 2);
+    document.getElementById('pct-'+o1).value = a;
+    document.getElementById('pct-'+o2).value = 100 - v - a;
+    updateLabels(); calculate();
+  }
+
+  function pick(el) {
+    const g = el.dataset.group;
+    document.querySelectorAll('.opt[data-group="'+g+'"]').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+    calculate();
+  }
+
+  function onPlatformPick(el) {
+    const isAndroid = el.dataset.key === 'android';
+    document.getElementById('row-device').style.display = isAndroid ? 'block' : 'none';
+    if (!isAndroid && optionalState.device) {
+      optionalState.device = false;
+      document.getElementById('body-device').classList.remove('open');
+      const btn = document.getElementById('toggle-device');
+      btn.classList.remove('open');
+      btn.querySelector('.chevron').textContent = '+';
+      document.getElementById('editbtn-device').style.display = 'none';
+    }
+  }
+
+  function onLockPick(el) {
+    const isLocked = el.dataset.key === 'locked';
+    document.getElementById('howlocked-indent').style.display =
+      (isLocked && optionalState.lock) ? 'block' : 'none';
+  }
+
+  function toggleEdit(group) {
+    document.getElementById('edit-'+group).classList.toggle('open');
+  }
+
+  function toggleOptional(group) {
+    optionalState[group] = !optionalState[group];
+    const open = optionalState[group];
+    document.getElementById('body-'+group).classList.toggle('open', open);
+    const btn = document.getElementById('toggle-'+group);
+    btn.classList.toggle('open', open);
+    btn.querySelector('.chevron').textContent = open ? '−' : '+';
+    const editBtn = document.getElementById('editbtn-'+group);
+    if (editBtn) editBtn.style.display = open ? 'inline' : 'none';
+
+    if (group === 'lock') {
+      const isLocked = document.querySelector('.opt.active[data-group="lock"]')?.dataset.key === 'locked';
+      document.getElementById('howlocked-indent').style.display = (open && isLocked) ? 'block' : 'none';
+    }
+    calculate();
+  }
+
+  function getActive(group) {
+    return document.querySelector('.opt.active[data-group="'+group+'"]')?.dataset.key || null;
+  }
+
+  function calculate() {
+    const dir = getActive('direction');
+    const plat = getActive('platform');
+    const isAndroid = plat === 'android';
+    const factors = [];
+
+    factors.push({ label: dir === 'outbound' ? 'Outbound' : 'Inbound', val: getPct(dir) });
+    factors.push({ label: plat === 'ios' ? 'iOS' : 'Android', val: getPct(plat) });
+
+    if (isAndroid && optionalState.device) {
+      const dev = getActive('device');
+      if (dev) factors.push({ label: dev === 'samsung' ? 'Samsung' : 'Pixel', val: getPct(dev) });
+    }
+    if (optionalState.appstate) {
+      const app = getActive('appstate');
+      const appLabels = { closed:'Closed', background:'Background', active:'Active' };
+      if (app) factors.push({ label: appLabels[app], val: getPct(app) });
+    }
+    if (optionalState.lock) {
+      const lock = getActive('lock');
+      if (lock) {
+        factors.push({ label: lock === 'locked' ? 'Locked' : 'Unlocked', val: getPct(lock) });
+        if (lock === 'locked') {
+          const how = getActive('howlocked');
+          if (how) factors.push({ label: how === 'timedout' ? 'Timed out' : 'Manual', val: getPct(how) });
+        }
+      }
+    }
+
+    const product = factors.reduce((acc, f) => acc * (f.val / 100), 1);
+    const pct = (product * 100).toFixed(2);
+    document.getElementById('result-num').textContent = pct + '%';
+    document.getElementById('result-label').textContent = 'of all sessions match this condition';
+    const parts = factors.map(f => '<span class="factor">'+f.val+'%</span> '+f.label).join(' &times; ');
+    document.getElementById('formula').innerHTML = parts + ' <span class="eq">= '+pct+'%</span>';
+  }
+
+  function resetAll() {
+    Object.keys(defaults).forEach(k => {
+      const el = document.getElementById('pct-'+k);
+      if (el) el.value = defaults[k];
+    });
+    document.querySelectorAll('.opt').forEach(o => {
+      o.classList.toggle('active', Array.from(o.parentElement.querySelectorAll('.opt')).indexOf(o) === 0);
+    });
+    Object.keys(optionalState).forEach(g => {
+      optionalState[g] = false;
+      const body = document.getElementById('body-'+g);
+      const btn = document.getElementById('toggle-'+g);
+      const editBtn = document.getElementById('editbtn-'+g);
+      if (body) body.classList.remove('open');
+      if (btn) { btn.classList.remove('open'); btn.querySelector('.chevron').textContent = '+'; }
+      if (editBtn) editBtn.style.display = 'none';
+    });
+    document.getElementById('row-device').style.display = 'none';
+    document.getElementById('howlocked-indent').style.display = 'none';
+    document.querySelectorAll('.edit-panel').forEach(p => p.classList.remove('open'));
+    updateLabels();
+    calculate();
+  }
+
+  updateLabels();
+  calculate();
+</script>
+</body>
+</html>
