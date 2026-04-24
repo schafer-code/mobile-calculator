@@ -148,15 +148,15 @@
   </div>
   <div class="options" id="direction">
     <div class="opt active" data-group="direction" data-key="outbound" onclick="pick(this)">
-      <span class="dot"></span> Outbound <span class="opt-pct" id="lbl-outbound">90%</span>
+      <span class="dot"></span> Outbound <span class="opt-pct" id="lbl-outbound">95%</span>
     </div>
     <div class="opt" data-group="direction" data-key="inbound" onclick="pick(this)">
-      <span class="dot"></span> Inbound <span class="opt-pct" id="lbl-inbound">10%</span>
+      <span class="dot"></span> Inbound <span class="opt-pct" id="lbl-inbound">5%</span>
     </div>
   </div>
   <div class="edit-panel" id="edit-direction">
-    <div class="edit-field">Outbound <input type="number" id="pct-outbound" value="90" min="0" max="100" step="1" oninput="syncPair('outbound','inbound',this)"> %</div>
-    <div class="edit-field">Inbound <input type="number" id="pct-inbound" value="10" min="0" max="100" step="1" oninput="syncPair('inbound','outbound',this)"> %</div>
+    <div class="edit-field">Outbound <input type="number" id="pct-outbound" value="95" min="0" max="100" step="1" oninput="syncPair('outbound','inbound',this)"> %</div>
+    <div class="edit-field">Inbound <input type="number" id="pct-inbound" value="5" min="0" max="100" step="1" oninput="syncPair('inbound','outbound',this)"> %</div>
     <div class="edit-note">Must sum to 100%</div>
   </div>
 </div>
